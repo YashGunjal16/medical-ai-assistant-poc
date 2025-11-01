@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: medical-ai-backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_SEARCH_API_KEY=${GOOGLE_SEARCH_API_KEY}
+      - GOOGLE_SEARCH_ENGINE_ID=${GOOGLE_SEARCH_ENGINE_ID}
+      - ENV=development
+    volumes:
+      - .:/app
+      - logs:/app/logs
+      - vectorstore:/app/app/vectorstore/chroma
+    depends_on:
+      - chroma
+
+  frontend:
+    build: .
+    container_name: medical-ai-frontend
+    command: streamlit run frontend/streamlit_app.py
+    ports:
+      - "8501:8501"
+    environment:
+      - BACKEND_URL=http://backend:8000
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_HEADLESS=true
+    volumes:
+      - .:/app
+    depends_on:
+      - backend
+
+  chroma:
+    image: ghcr.io/chroma-core/chroma:0.4.24
+    container_name: medical-ai-chroma
+    ports:
+      - "8000:8000"
+    environment:
+      - CHROMA_DB_IMPL=duckdb
+      - PERSIST_DIRECTORY=/chroma_data
+    volumes:
+      - chroma_data:/chroma_data
+
+volumes:
+  logs:
+  chroma_data:
+  vectorstore:
