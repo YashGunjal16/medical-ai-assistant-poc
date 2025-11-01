@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Medical AI POC - Post-Discharge Care Assistant
 
 A production-ready Proof of Concept for an AI-powered post-discharge patient care system using FastAPI, LangGraph, Streamlit, and ChromaDB with Google Gemini.
@@ -416,3 +417,4 @@ The system works on any platform supporting Docker:
 ---
 
 **Medical AI for Better Patient Outcomes**
+
