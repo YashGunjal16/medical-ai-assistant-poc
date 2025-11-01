@@ -2,25 +2,17 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements
 COPY requirements.txt .
-
-# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
 COPY . .
 
-# Create logs directory
-RUN mkdir -p logs
+# Make the start script executable
+RUN chmod +x ./start.sh
 
-# Expose ports
-EXPOSE 8000 8501
+# Expose the ports for both services
+EXPOSE 8000 
+EXPOSE 8501
 
-# Default to running backend
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# The start command will run our script
+CMD ["bash", "./start.sh"]

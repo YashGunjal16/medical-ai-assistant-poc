@@ -10,7 +10,7 @@ import os
 # === START OF CHANGE ===
 # Use an environment variable for the backend URL.
 # This makes it work on Render and falls back to localhost for local testing.
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000") 
 # === END OF CHANGE ===
 
 
