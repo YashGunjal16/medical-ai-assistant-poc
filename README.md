@@ -157,7 +157,7 @@ medical-ai-assistant/
 │   │   ├── clinical_agent.py      # Medical queries
 │   │   └── receptionist_agent.py  # Patient greeting & routing
 │   ├── data/
-│   │   ├── patients.json          # 25 dummy patients
+│   │   ├── patients.json          # 45 dummy patients
 │   │   └── nephrology_reference.pdf
 │   ├── tools/
 │   │   ├── db_tool.py             # Patient database
