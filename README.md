@@ -295,6 +295,17 @@ This project is licensed under the MIT License.
 
 ---
 
+## 👨‍💻 Author
+
+**Yash Gunjal**  
+Developer and Maintainer of *Medical AI Assistant POC*
+
+- [GitHub](https://github.com/YashGunjal16)
+- [LinkedIn](www.linkedin.com/in/yash-gunjal-5b728125b)
+- 📧 yash830gunjal@gmail.com
+
+---
+
 ## 🙏 Acknowledgments
 
 - **Google Gemini Team** - Free LLM API
