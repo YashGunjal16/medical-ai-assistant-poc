@@ -9,12 +9,8 @@ import json
 class VectorStore:
     """Manage ChromaDB vector store operations."""
     
-    def __init__(self, persist_dir: str = None):
-         # === START OF CHANGE ===
-        # Use an environment variable for the persist directory, with a local default.
-        # This is the key change for Render compatibility.
-        self.persist_dir = persist_dir or os.getenv("VECTOR_STORE_PATH", "vectorstore/chroma")
-        # === END OF CHANGE ===
+    def __init__(self, persist_dir: str = "app/vectorstore/chroma"):
+        self.persist_dir = persist_dir
         os.makedirs(persist_dir, exist_ok=True)
         
         # Initialize ChromaDB client with persistence

@@ -144,8 +144,8 @@ def test_embeddings():
     print("🎯 RECOMMENDATIONS")
     print("=" * 80)
     
-    if total_docs < 21233:
-        remaining = 21233 - total_docs
+    if total_docs < 15266:
+        remaining = 15266 - total_docs
         print(f"⚠️ You have {remaining} documents remaining to embed")
         print(f"   Current coverage: {(total_docs / 21233) * 100:.1f}%")
         print(f"   To complete: Re-upload the PDF file")

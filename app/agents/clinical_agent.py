@@ -9,7 +9,7 @@ from app.utils.model_config import get_available_model
 class ClinicalAgent:
     """
     Clinical AI Agent - Handles medical queries using RAG and web search
-    Provides citations and educational information
+    and educational information with clear source indicators
     """
     
     def __init__(self):
@@ -33,10 +33,12 @@ class ClinicalAgent:
         
         # Build context from RAG results
         rag_context = ""
+        rag_sources = []  # NEW: Track RAG sources
         if rag_results["success"] and rag_results["results"]:
             rag_context = "Reference Material Findings:\n"
-            for result in rag_results["results"]:
-                rag_context += f"\nSource: {result['source']}\n{result['content'][:300]}...\n"
+            for idx, result in enumerate(rag_results["results"], 1):  # CHANGED: Added enumeration
+                rag_context += f"\n[Reference {idx}] {result['content'][:400]}...\n"  # CHANGED: Increased content length and added reference number
+                rag_sources.append(result.get('source', 'Medical Reference Database'))  # NEW: Collect sources
         
         # Prepare clinical context from patient data
         clinical_context = f"""
@@ -53,29 +55,45 @@ PATIENT'S QUERY: {patient_input}
 
 {"RELEVANT REFERENCE MATERIALS:\n" + rag_context if rag_context else ""}
 
-DISCLAIMER: This is an AI assistant for educational purposes only. Always consult healthcare professionals for medical advice.
+IMPORTANT INSTRUCTIONS:  # NEW SECTION
+1. Provide educational information relevant to their diagnosis and query
+2. Include any warnings or precautions from reference materials
+3. Recommend seeking professional medical care if needed
+4. DO NOT include specific citations, page numbers, or quoted text
+5. DO NOT reproduce exact text from sources
+6. Summarize information in your own words
+7. Keep the response clear, concise, and patient-friendly
 
-Please provide:
-1. Educational information relevant to their diagnosis and query
-2. Any warnings or precautions mentioned in reference materials
-3. Recommendation to seek professional medical care if needed
-4. Citations from reference materials used
+DISCLAIMER: This is an AI assistant for educational purposes only. Always consult healthcare professionals for medical advice.
 """
         
         # Generate response using LLM
         clinical_response = self.llm.invoke(clinical_context)
         response_text = clinical_response.content
         
-        # If RAG didn't find sufficient info, offer web search
-        web_search_offered = False
-        if not rag_results["success"] and "latest" in patient_input.lower():
+        # NEW: Remove any citation artifacts that might slip through
+        response_text = self._clean_citations(response_text)
+        
+        # CHANGED: Better web search logic and tracking
+        web_search_used = False  # RENAMED from web_search_offered
+        web_sources = []  # NEW: Track web sources
+        if "latest" in patient_input.lower() or "recent" in patient_input.lower() or not rag_results["success"]:  # CHANGED: Added more trigger words
             web_results = self.web_search.search(patient_input, max_results=2)
             if web_results["success"] and web_results["results"]:
-                web_info = "\n\nWEB SEARCH RESULTS (Recent Information):\n"
+                web_info = "\n\n📱 **Additional Information from Recent Sources:**\n"  # CHANGED: Added emoji and better formatting
                 for result in web_results["results"]:
-                    web_info += f"- {result['title']}: {result['snippet'][:150]}...\n"
+                    web_info += f"• {result['snippet'][:200]}...\n"  # CHANGED: Increased snippet length and bullet points
+                    web_sources.append(result.get('title', 'Web Source'))  # NEW: Collect web sources
                 response_text += web_info
-                web_search_offered = True
+                web_search_used = True  # CHANGED: Renamed variable
+        
+        # NEW: Add source information at the end
+        source_info = self._format_sources(rag_sources, web_sources)
+        if source_info:
+            response_text += f"\n\n{source_info}"
+        
+        # NEW: Add disclaimer at the end
+        response_text += "\n\n⚠️ **Disclaimer:** This is an AI assistant for educational purposes only. Always consult healthcare professionals for medical advice."
         
         log_interaction(patient_name, self.name, patient_input, response_text, "clinical_response")
         
@@ -83,6 +101,44 @@ Please provide:
             "success": True,
             "message": response_text,
             "rag_used": rag_results["success"],
-            "web_search_used": web_search_offered,
-            "disclaimer": "This is an AI assistant for educational purposes only. Always consult healthcare professionals for medical advice."
+            "web_search_used": web_search_used  # CHANGED: Renamed from web_search_offered
+            # REMOVED: "disclaimer" key from return dict since it's now in the message
         }
+    
+    # NEW METHOD
+    def _clean_citations(self, text: str) -> str:
+        """Remove citation artifacts from response"""
+        import re
+        
+        # Remove patterns like (Source: pdf, page X)
+        text = re.sub(r'\(Source:.*?\)', '', text)
+        
+        # Remove patterns like [Source: ...]
+        text = re.sub(r'\[Source:.*?\]', '', text)
+        
+        # Remove "Citations from reference materials used:" section
+        if "Citations from reference materials used:" in text or "Citations from Reference Materials Used:" in text:
+            text = re.split(r'Citations from [Rr]eference [Mm]aterials [Uu]sed:', text)[0]
+        
+        # Remove numbered citation sections like "4. Citations..."
+        text = re.sub(r'\n\d+\.\s*Citations.*$', '', text, flags=re.MULTILINE | re.DOTALL)
+        
+        # Clean up multiple newlines
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text.strip()
+    
+    # NEW METHOD
+    def _format_sources(self, rag_sources: list, web_sources: list) -> str:
+        """Format source information"""
+        source_text = ""
+        
+        if rag_sources:
+            source_text += "📚 **Information Source:** Medical Reference Database (Vector DB)"
+        
+        if web_sources:
+            if source_text:
+                source_text += "\n"
+            source_text += "🌐 **Additional Sources:** Web Search"
+        
+        return source_text
