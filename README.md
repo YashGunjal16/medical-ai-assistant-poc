@@ -101,7 +101,7 @@ Receptionist Agent (Routing)
 - **Clinical Agent**: Medical query processing with RAG and web search
 - **RAG System**: PDF processing, embeddings, semantic search
 - **Vector Store**: ChromaDB with persistent storage
-- **Patient Database**: 25 dummy discharge reports for testing
+- **Patient Database**: 45+ dummy discharge reports for testing
 
 ---
 
@@ -111,7 +111,7 @@ Receptionist Agent (Routing)
 |-----------|-----------|---------|
 | **Backend** | FastAPI | Async REST API |
 | **Frontend** | Streamlit | Chat interface |
-| **LLM** | Google Gemini 1.5 Flash | Text generation |
+| **LLM** | Google Gemini 2.5 Flash | Text generation |
 | **Embeddings** | Gemini Embeddings | 768-dim vectors |
 | **Vector DB** | ChromaDB | Semantic search |
 | **Agents** | LangGraph | Multi-agent orchestration |
@@ -140,7 +140,7 @@ LOG_LEVEL=INFO
 Edit `app/utils/pdf_processor.py`:
 
 ```python
-CHUNK_SIZE = 600        # Characters per chunk
+CHUNK_SIZE = 700        # Characters per chunk
 CHUNK_OVERLAP = 150     # Overlap for context
 ```
 
@@ -243,13 +243,13 @@ batch_size=5000  # Reduce from 10000
 
 | Metric | Average |
 |--------|---------|
-| Patient Greeting | 1-2s |
-| Medical Query (RAG) | 3-5s |
+| Patient Greeting | 5-10s |
+| Medical Query (RAG) | 15-25s |
 | PDF Upload (100 pages) | 2-3 min |
 | Semantic Search | <100ms |
 
 **Tested Capacity:**
-- 25,000+ documents in vector store
+- 15,000+ documents in vector store
 - 10-20 concurrent users (single instance)
 - 500MB-1GB memory usage
 
