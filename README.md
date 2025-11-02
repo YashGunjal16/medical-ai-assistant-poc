@@ -1,424 +1,317 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
+# 🏥 Medical AI Assistant
 
->>>>>>> e69cfc0 (Initial commit: Setup project for Render deployment)
-# Medical AI POC - Post-Discharge Care Assistant
+> **AI-powered post-discharge patient care system using RAG, LangGraph, and Google Gemini**
 
-A production-ready Proof of Concept for an AI-powered post-discharge patient care system using FastAPI, LangGraph, Streamlit, and ChromaDB with Google Gemini.
-
-## Overview
-
-This system implements a dual-agent architecture for managing post-discharge patient care:
-- **Receptionist Agent**: Greets patients and retrieves discharge reports
-- **Clinical Agent**: Handles medical queries using RAG and provides evidence-based guidance
-- **RAG System**: Leverages ChromaDB with Gemini embeddings for semantic document retrieval
-- **Vector Database**: Supports PDF uploads with automatic chunking and embedding generation
-
-## Features
-
-✅ **Multi-Agent Architecture** - LangGraph-based orchestration
-✅ **RAG Implementation** - ChromaDB with Gemini embeddings (free tier)
-✅ **PDF Management** - Upload, chunk, and embed medical documents
-✅ **Vector Database** - Full-text semantic search with free Gemini embeddings
-✅ **Patient Database** - 25+ dummy discharge reports
-✅ **Web Search Integration** - Fallback for latest information
-✅ **Comprehensive Logging** - All interactions tracked
-✅ **FastAPI Backend** - RESTful endpoints with PDF upload
-✅ **Streamlit UI** - Interactive patient interface with knowledge base management
-✅ **Docker Support** - Ready for deployment
-✅ **Render.com Ready** - Direct deployment configuration
-
-## Project Structure
-
-\`\`\`
-medical_ai_poc/
-├── app/
-│   ├── main.py                 # FastAPI application
-│   ├── agents/
-│   │   ├── receptionist_agent.py
-│   │   └── clinical_agent.py
-│   ├── tools/
-│   │   ├── rag_tool.py
-│   │   ├── db_tool.py
-│   │   └── web_search_tool.py
-│   ├── utils/
-│   │   ├── logger.py
-│   │   ├── helpers.py
-│   │   ├── pdf_processor.py       # NEW: PDF extraction and chunking
-│   │   ├── embeddings.py          # NEW: Gemini embeddings integration
-│   │   └── vector_store.py        # NEW: ChromaDB vector store management
-│   ├── data/
-│   │   └── patients.json
-│   └── vectorstore/
-│       └── chroma/                # NEW: Persistent vector database
-├── frontend/
-│   └── streamlit_app.py
-├── scripts/
-│   ├── populate_vector_store.py   # NEW: Batch PDF processing
-│   └── init_vector_store.py       # NEW: Vector store initialization
-├── requirements.txt
-├── .env.example
-├── docker-compose.yml
-├── Dockerfile
-├── render.yaml
-├── VECTOR_DB_SETUP.md             # NEW: Vector DB documentation
-└── README.md
-\`\`\`
-
-## Quick Start
-
-### Option 1: Local Development (Fastest)
-
-\`\`\`bash
-# Clone and setup
-git clone <repository-url>
-cd medical_ai_poc
-python -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure
-cp .env.example .env
-# Edit .env with your GOOGLE_API_KEY
-
-# Initialize vector store with default materials
-python scripts/init_vector_store.py
-
-# Terminal 1: Run backend
-uvicorn app.main:app --reload
-# http://localhost:8000
-
-# Terminal 2: Run frontend
-streamlit run frontend/streamlit_app.py
-# http://localhost:8501
-\`\`\`
-
-### Option 2: Docker (Recommended)
-
-\`\`\`bash
-# Clone and setup
-git clone <repository-url>
-cd medical_ai_poc
-
-# Create .env file
-cp .env.example .env
-# Edit .env with your GOOGLE_API_KEY
-
-# Build and run
-docker-compose up -d
-
-# Access
-# Backend: http://localhost:8000
-# Frontend: http://localhost:8501
-# Chroma DB: http://localhost:8000
-\`\`\`
-
-### Option 3: Render.com Deployment
-
-1. Push code to GitHub
-2. Connect to Render.com
-3. Create services using `render.yaml`
-4. Set `GOOGLE_API_KEY` environment variable
-5. Deploy automatically on push
-
-## Vector Database Setup
-
-### Initialize Vector Store
-
-\`\`\`bash
-# Initialize with default nephrology reference materials
-python scripts/init_vector_store.py
-
-# This creates:
-# - ChromaDB collection with Gemini embeddings
-# - 5 reference material categories
-# - ~100+ initial document chunks
-\`\`\`
-
-### Upload Medical PDFs
-
-#### Via Streamlit UI
-1. Open Streamlit frontend: http://localhost:8501
-2. Sidebar → "Knowledge Base Management" (expanded)
-3. Upload PDF file
-4. Click "Process & Upload PDF"
-5. Monitor vector store stats
-
-#### Via API
-\`\`\`bash
-curl -X POST http://localhost:8000/api/rag/upload-pdf \
-  -F "file=@/path/to/comprehensive-clinical-nephrology.pdf"
-\`\`\`
-
-#### Via Script
-\`\`\`bash
-python scripts/populate_vector_store.py \
-  --pdf-path /path/to/file.pdf \
-  --source-name "nephrology_reference"
-\`\`\`
-
-### Check Vector Store Status
-\`\`\`bash
-curl http://localhost:8000/api/rag/stats
-
-# Response:
-{
-  "success": true,
-  "stats": {
-    "total_documents": 250,
-    "collection_name": "medical_documents",
-    "persist_dir": "app/vectorstore/chroma"
-  }
-}
-\`\`\`
-
-## API Endpoints
-
-### Core Patient Endpoints
-
-**Health Check**
-\`\`\`bash
-GET /health
-\`\`\`
-
-**Greet Patient & Start Session**
-\`\`\`bash
-POST /api/greet
-Content-Type: application/json
-
-{"patient_name": "John Smith"}
-\`\`\`
-
-**Send Message to Patient**
-\`\`\`bash
-POST /api/chat
-Content-Type: application/json
-
-{
-  "patient_name": "John Smith",
-  "session_id": "unique_session_id",
-  "query": "What should I eat?"
-}
-\`\`\`
-
-**Get Session Information**
-\`\`\`bash
-GET /api/session/{session_id}
-\`\`\`
-
-### Admin Endpoints
-
-**List All Patients**
-\`\`\`bash
-GET /api/patients
-\`\`\`
-
-**List Active Sessions**
-\`\`\`bash
-POST /api/sessions/list
-\`\`\`
-
-**Get System Logs**
-\`\`\`bash
-GET /api/logs
-\`\`\`
-
-### Vector Database Endpoints
-
-**Get Vector Store Stats**
-\`\`\`bash
-GET /api/rag/stats
-\`\`\`
-
-**Upload PDF to Vector Store**
-\`\`\`bash
-POST /api/rag/upload-pdf
-Content-Type: multipart/form-data
-
-file: <PDF file>
-\`\`\`
-
-## Embedding Details
-
-### Gemini Embedding Model
-- **Model**: `models/embedding-001`
-- **Embedding Dimension**: 768
-- **Cost**: FREE (included in free tier)
-- **Task Type**: RETRIEVAL_DOCUMENT (optimized for semantic search)
-
-### Chunking Strategy
-- **Chunk Size**: 600 characters
-- **Overlap**: 150 characters
-- **Strategy**: Recursive text splitting with sentence boundaries
-- **Purpose**: Balance context preservation with retrieval precision
-
-### Retrieval Strategy
-- **Algorithm**: Cosine similarity search
-- **Default Results**: Top 3 most similar chunks
-- **Distance Metric**: Cosine distance (lower = more similar)
-- **Augmentation**: Retrieved chunks injected into LLM prompt
-
-## Usage Examples
-
-### Python Client Example
-\`\`\`python
-import requests
-
-BASE_URL = "http://localhost:8000"
-
-# 1. Greet patient
-response = requests.post(
-    f"{BASE_URL}/api/greet",
-    json={"patient_name": "John Smith"}
-)
-data = response.json()
-session_id = data["session_id"]
-print(f"Greeting: {data['message']}")
-
-# 2. Send message
-response = requests.post(
-    f"{BASE_URL}/api/chat",
-    json={
-        "patient_name": "John Smith",
-        "session_id": session_id,
-        "query": "What are my warning signs?"
-    }
-)
-data = response.json()
-print(f"Agent Used: {data['agent_used']}")
-print(f"Response: {data['response']}")
-
-# 3. Upload PDF
-with open("nephrology.pdf", "rb") as f:
-    response = requests.post(
-        f"{BASE_URL}/api/rag/upload-pdf",
-        files={"file": f}
-    )
-    print(response.json())
-
-# 4. Check vector store
-response = requests.get(f"{BASE_URL}/api/rag/stats")
-print(response.json()["stats"])
-\`\`\`
-
-## Logging
-
-All interactions logged to `logs/` directory:
-- **app.log** - General application logs
-- **interactions.jsonl** - Patient chat interactions
-- **agent_handoffs.jsonl** - Receptionist to clinical routing decisions
-- **retrievals.jsonl** - RAG retrieval attempts with results
-
-Example log:
-\`\`\`json
-{
-  "timestamp": "2024-01-20T10:30:45.123456",
-  "patient_name": "John Smith",
-  "agent": "Clinical Agent",
-  "query": "What medications should I take?",
-  "retrieved_chunks": 3,
-  "retrieval_successful": true
-}
-\`\`\`
-
-## Deployment
-
-### On Render.com
-
-1. **Push to GitHub**
-   \`\`\`bash
-   git push origin main
-   \`\`\`
-
-2. **Create Render Services**
-   - Go to https://dashboard.render.com
-   - Click "New +"
-   - Select "Web Service"
-   - Connect GitHub repository
-   - Render will detect render.yaml and auto-configure
-
-3. **Set Environment Variables**
-   - Dashboard → Environment
-   - Add: `GOOGLE_API_KEY=your_key`
-   - Add: `GOOGLE_SEARCH_API_KEY=your_key` (optional)
-
-4. **Auto Deploy**
-   - Any push to main triggers deployment
-   - Services run on free tier (with cold starts)
-
-### On Other Platforms
-
-The system works on any platform supporting Docker:
-- AWS ECS
-- Google Cloud Run
-- DigitalOcean App Platform
-- Heroku (with procfile)
-
-## Performance
-
-- **Embedding Generation**: ~0.5-1 second per chunk (Gemini API)
-- **Semantic Search**: <100ms (in-memory ChromaDB)
-- **RAG Query**: 2-5 seconds total (embedding + search + LLM)
-- **PDF Processing**: ~1-2 minutes per 100-page document
-- **Storage**: ~500KB per 1000 document chunks
-
-## Troubleshooting
-
-### Vector Store Issues
-- **No documents found**: Run `python scripts/init_vector_store.py`
-- **Upload fails**: Check file is PDF and <50MB
-- **Slow retrieval**: Increase `n_results` parameter in RAG tool
-
-### PDF Processing Issues
-- **Encoding errors**: Ensure PDF is text-based (not scanned images)
-- **Large files**: Process in batches using the script
-- **API timeouts**: Check Gemini API rate limits
-
-### Deployment Issues
-- **CORS errors**: Already configured in FastAPI
-- **Port conflicts**: Change ports in docker-compose.yml
-- **Memory issues**: Reduce chunk size or use cloud deployment
-
-## Future Enhancements
-
-- [ ] Multi-language support with translation
-- [ ] Advanced analytics dashboard
-- [ ] Real-time notifications and reminders
-- [ ] Video consultation integration
-- [ ] EHR system integration
-- [ ] Advanced search with filters
-- [ ] Document versioning and updates
-- [ ] Specialized embeddings for medical terminology
-
-## Technologies
-
-- **Backend**: FastAPI, Python 3.11
-- **Frontend**: Streamlit
-- **LLM**: Google Gemini (free tier)
-- **Embeddings**: Gemini embeddings (free)
-- **Vector DB**: ChromaDB (open source)
-- **Agents**: LangGraph
-- **PDF Processing**: PyPDF2
-- **Deployment**: Docker, Render.com
-
-## Security Notes
-
-- All data is processed locally (ChromaDB)
-- Embeddings sent to Gemini API only
-- No data stored on Render.com (ephemeral)
-- Use `.env` for sensitive variables
-- Never commit `.env` to git
-
-## Support & Documentation
-
-- See `VECTOR_DB_SETUP.md` for detailed vector database configuration
-- Check `logs/` directory for debugging
-- Review API documentation at http://localhost:8000/docs
+An intelligent healthcare system designed to support patients after hospital discharge, particularly those with chronic kidney disease (CKD). The system uses multi-agent AI with RAG (Retrieval-Augmented Generation) to provide personalized, evidence-based medical guidance.
 
 ---
 
-**Medical AI for Better Patient Outcomes**
+## 🎯 Key Features
 
+- **🤖 Dual-Agent System**: Intelligent routing between receptionist and clinical agents
+- **📚 RAG-Powered**: Semantic search through medical literature using ChromaDB
+- **💾 Vector Database**: 768-dimensional Gemini embeddings for accurate retrieval
+- **📄 PDF Knowledge Base**: Upload and query medical documents
+- **🔍 Web Search Integration**: Fallback to Google Search and PubMed for latest research
+- **🆓 Free to Run**: Uses Google Gemini's free API tier
+- **⚕️ Safety-First**: Automatic medical disclaimers on all clinical responses
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.12+
+- Google Gemini API Key ([Get it free](https://makersuite.google.com/app/apikey))
+- 4GB RAM minimum
+
+### Installation
+
+```bash
+# 1. Clone repository
+git clone <repository-url>
+cd medical-ai-assistant
+
+# 2. Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Configure environment
+cp .env.example .env
+# Edit .env and add your GOOGLE_API_KEY
+
+# 5. Initialize vector store
+python scripts/init_vector_store.py
+
+# 6. Start backend (Terminal 1)
+uvicorn app.main:app --reload --port 8000
+
+# 7. Start frontend (Terminal 2)
+streamlit run frontend/streamlit_app.py
+```
+
+**Access the application:**
+- Frontend: http://localhost:8501
+- API Docs: http://localhost:8000/docs
+
+### Docker Setup
+
+```bash
+# 1. Configure environment
+cp .env.example .env
+# Edit .env with your GOOGLE_API_KEY
+
+# 2. Start services
+docker-compose up -d
+
+# 3. Initialize vector store
+docker-compose exec backend python scripts/init_vector_store.py
+
+# Access at http://localhost:8501
+```
+
+---
+
+## 🏗️ Architecture
+
+```
+User Query
+    ↓
+Receptionist Agent (Routing)
+    ├─→ Administrative → Direct Response
+    └─→ Medical Query
+          ↓
+    Clinical Agent
+          ├─→ RAG Retrieval (ChromaDB)
+          ├─→ Web Search (if needed)
+          └─→ Patient Context
+          ↓
+    Gemini 1.5 Flash
+          ↓
+    Response + Citations + Disclaimers
+```
+
+### Components
+
+- **Receptionist Agent**: Patient greeting, session management, query routing
+- **Clinical Agent**: Medical query processing with RAG and web search
+- **RAG System**: PDF processing, embeddings, semantic search
+- **Vector Store**: ChromaDB with persistent storage
+- **Patient Database**: 25 dummy discharge reports for testing
+
+---
+
+## 🛠️ Technology Stack
+
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **Backend** | FastAPI | Async REST API |
+| **Frontend** | Streamlit | Chat interface |
+| **LLM** | Google Gemini 1.5 Flash | Text generation |
+| **Embeddings** | Gemini Embeddings | 768-dim vectors |
+| **Vector DB** | ChromaDB | Semantic search |
+| **Agents** | LangGraph | Multi-agent orchestration |
+| **PDF Processing** | PyPDF2 | Document extraction |
+
+---
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+Create `.env` file:
+
+```bash
+# Required
+GOOGLE_API_KEY=your_gemini_api_key_here
+
+# Optional
+GOOGLE_SEARCH_API_KEY=your_search_api_key
+GOOGLE_SEARCH_ENGINE_ID=your_search_engine_id
+LOG_LEVEL=INFO
+```
+
+### Chunking Settings
+
+Edit `app/utils/pdf_processor.py`:
+
+```python
+CHUNK_SIZE = 600        # Characters per chunk
+CHUNK_OVERLAP = 150     # Overlap for context
+```
+
+---
+
+## 📁 Project Structure
+
+```
+medical-ai-assistant/
+├── app/
+│   ├── main.py                    # FastAPI entry point
+│   ├── __init__.py
+│   ├── agents/
+│   │   ├── clinical_agent.py      # Medical queries
+│   │   └── receptionist_agent.py  # Patient greeting & routing
+│   ├── data/
+│   │   ├── patients.json          # 25 dummy patients
+│   │   └── nephrology_reference.pdf
+│   ├── tools/
+│   │   ├── db_tool.py             # Patient database
+│   │   ├── rag_tool.py            # RAG interface
+│   │   └── web_search_tool.py     # Google/PubMed search
+│   ├── utils/
+│   │   ├── checkpoint_manager.py  # Embedding progress tracking
+│   │   ├── embeddings.py          # Gemini embeddings
+│   │   ├── helpers.py             # Utility functions
+│   │   ├── logger.py              # Logging system
+│   │   ├── model_config.py        # LLM configuration
+│   │   ├── pdf_processor.py       # PDF chunking
+│   │   └── vector_store.py        # ChromaDB ops
+│   └── vectorstore/
+│       ├── chroma/                # Persistent vector DB
+│       └── checkpoints/           # Embedding checkpoints
+├── frontend/
+│   └── streamlit_app.py           # UI
+├── logs/
+│   ├── agent_handoffs.jsonl       # Agent routing logs
+│   ├── app.log                    # Application logs
+│   ├── interactions.jsonl         # Chat history
+│   └── retrievals.jsonl           # RAG retrieval logs
+├── processing docs pro/           # Documentation
+│   ├── ARCHITECTURE_REPORT.md
+│   ├── DEPLOYMENT_GUIDE.md
+│   ├── PROJECT_VERIFICATION_CHECKLIST.md
+│   ├── VECTOR_DB_SETUP.md
+│   └── WORKFLOW_EXAMPLES.md
+├── scripts/
+│   ├── demo_workflow.py           # Demo script
+│   ├── embedding_status.py        # Check embedding progress
+│   ├── init_vector_store.py       # Initialize DB
+│   ├── list_available_models.py   # List Gemini models
+│   ├── populate_vector_store.py   # Batch PDF upload
+│   ├── resume_embeddings.py       # Resume interrupted embeddings
+│   └── sync_existing_embeddings.py # Checkpoint sync
+├── testing/                       # Test files
+├── .env                           # Environment config (not in git)
+├── .env.example                   # Environment template
+├── .gitattributes
+├── .gitignore
+├── docker-compose.yml             # Docker orchestration
+├── Dockerfile                     # Container definition
+├── package.json                   # Node dependencies (if any)
+├── README.md                      # This file
+├── render.yaml                    # Render.com deployment
+├── requirements.txt               # Python dependencies
+└── start.sh                       # Startup script
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**"GOOGLE_API_KEY not set"**
+```bash
+cp .env.example .env
+# Add your API key to .env
+```
+
+**"No embeddings found"**
+```bash
+python scripts/init_vector_store.py
+```
+
+**"Batch size exceeds maximum"**
+```python
+# Edit app/utils/vector_store.py
+batch_size=5000  # Reduce from 10000
+```
+
+**Slow responses**
+- Check internet connection (for web search)
+- Reduce chunk size in PDF processor
+- Monitor Gemini API rate limits
+
+---
+
+## 📊 Performance
+
+| Metric | Average |
+|--------|---------|
+| Patient Greeting | 1-2s |
+| Medical Query (RAG) | 3-5s |
+| PDF Upload (100 pages) | 2-3 min |
+| Semantic Search | <100ms |
+
+**Tested Capacity:**
+- 25,000+ documents in vector store
+- 10-20 concurrent users (single instance)
+- 500MB-1GB memory usage
+
+---
+
+## ⚠️ Medical Disclaimer
+
+**IMPORTANT**: This is an educational AI system for demonstration purposes only.
+
+- ❌ NOT a substitute for professional medical advice
+- ❌ NOT for clinical decision-making
+- ✅ Always consult qualified healthcare professionals
+- ✅ For emergencies, call 911 or local emergency services
+
+---
+
+## 🚀 Future Enhancements
+
+- [ ] Deploy to Render.com
+- [ ] Multi-language support
+- [ ] Enhanced medical embeddings (BioBERT)
+- [ ] Medication interaction checker
+- [ ] HIPAA compliance features
+- [ ] Mobile app
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Please:
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Google Gemini Team** - Free LLM API
+- **ChromaDB Team** - Vector database
+- **LangChain Team** - Agent framework
+- **Medical Resources** - KDIGO, ADA, NKF guidelines
+
+---
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/medical-ai-assistant/issues)
+- **Documentation**: See README and inline comments
+- **API Docs**: http://localhost:8000/docs
+
+---
+
+**Built with ❤️ for better healthcare outcomes**
+
+*⭐ Star this repository if you find it useful!*

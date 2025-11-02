@@ -1609,15 +1609,4 @@ Ready to use the Medical AI Assistant? Follow this checklist:
 *Version: 1.0.0-POC*
 *Status: Production-Ready Proof of Concept*
 
-in clinicalagent
-## **New Features:**
 
-1. ✅ **Date Calculation** - Automatically calculates expected follow-up date based on discharge date
-2. ✅ **Intelligent Responses** - Different responses based on timing:
-   - **Overdue** - Urgent message to schedule immediately
-   - **Today** - Reminder that it's today
-   - **Very soon (1-3 days)** - Action needed reminder
-   - **Coming up (4-7 days)** - Preparation reminder
-   - **Future** - Informational message
-3. ✅ **Time Parsing** - Handles "1 week", "2 weeks", "1 month" etc.
-4. ✅ **Error Handling** - Graceful fallback if date parsing fails
